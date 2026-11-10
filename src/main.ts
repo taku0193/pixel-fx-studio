@@ -43,17 +43,18 @@ app.innerHTML = `
             `).join('')}
           </div>
         </fieldset>
-        <p class="selection-note">選ぶだけで、すぐに再生。<br>エフェクトは自動で繰り返します。</p>
+        <p class="selection-note">一時停止で、瞬間をじっくり。<br>気に入ったフレームを保存できます。</p>
       </aside>
       <section class="preview-panel" aria-labelledby="effect-name">
         <div class="preview-toolbar">
           <div class="preview-heading"><span class="preview-label">プレビュー</span><h2 id="effect-name">${effects[0].name}</h2></div>
           <div class="preview-actions">
-            <span class="playback-status"><span class="status-dot"></span><span id="playback-label">再生中</span></span>
+            <span class="playback-status"><span class="status-dot"></span><span id="playback-label" aria-live="polite">再生中</span></span>
+            <button class="playback-button" type="button" disabled aria-controls="effect-preview"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 4v12M13 4v12"/></svg><span>一時停止</span></button>
             <button class="save-button" type="button" disabled aria-label="現在のフレームをPNGで保存"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m-4-4 4 4 4-4M3 12v5h14v-5"/></svg>PNGを保存</button>
           </div>
         </div>
-        <div class="preview-stage"><canvas width="320" height="288"></canvas></div>
+        <div class="preview-stage"><canvas id="effect-preview" width="320" height="288"></canvas></div>
         <div class="preview-caption"><p id="effect-description">${effects[0].description}</p><span>320 × 288 <span class="unit">PX</span></span></div>
       </section>
     </div>
@@ -69,6 +70,7 @@ const name = app.querySelector<HTMLHeadingElement>('#effect-name')!;
 const description = app.querySelector<HTMLParagraphElement>('#effect-description')!;
 const playbackLabel = app.querySelector<HTMLSpanElement>('#playback-label')!;
 const playbackStatus = app.querySelector<HTMLSpanElement>('.playback-status')!;
+const playbackButton = app.querySelector<HTMLButtonElement>('.playback-button')!;
 const inputs = [...app.querySelectorAll<HTMLInputElement>('input[name="effect"]')];
 const saveButton = app.querySelector<HTMLButtonElement>('.save-button')!;
 const saveStatus = app.querySelector<HTMLParagraphElement>('[role="status"]')!;
@@ -80,6 +82,8 @@ function showRenderError() {
   errorMessage.hidden = false;
   playbackLabel.textContent = '再生エラー';
   playbackStatus.classList.add('is-error');
+  playbackStatus.classList.remove('is-paused');
+  playbackButton.disabled = true;
   saveButton.disabled = true;
 }
 
@@ -89,6 +93,16 @@ try {
 } catch {
   showRenderError();
   inputs.forEach((input) => { input.disabled = true; });
+}
+
+function updatePlaybackUi() {
+  const paused = renderer!.isPaused;
+  playbackLabel.textContent = paused ? '一時停止中' : '再生中';
+  playbackStatus.classList.toggle('is-paused', paused);
+  playbackStatus.classList.remove('is-error');
+  playbackButton.querySelector('span')!.textContent = paused ? '再生' : '一時停止';
+  playbackButton.querySelector('path')!.setAttribute('d', paused ? 'M7 4 15 10 7 16Z' : 'M7 4v12M13 4v12');
+  playbackButton.disabled = false;
 }
 
 function selectEffect(id: string) {
@@ -101,8 +115,7 @@ function selectEffect(id: string) {
     description.textContent = effect.description;
     canvas.setAttribute('aria-label', `${effect.name} のアニメーション`);
     errorMessage.hidden = true;
-    playbackLabel.textContent = '再生中';
-    playbackStatus.classList.remove('is-error');
+    updatePlaybackUi();
     saveButton.disabled = exporting;
     if (!exporting) saveStatus.textContent = '';
   } catch {
@@ -114,6 +127,13 @@ inputs.forEach((input) => {
   input.addEventListener('change', () => { if (input.checked) selectEffect(input.value); });
 });
 selectEffect(effects[0].id);
+
+playbackButton.addEventListener('click', () => {
+  if (!renderer || playbackButton.disabled) return;
+  if (renderer.isPaused) renderer.resume();
+  else renderer.pause();
+  updatePlaybackUi();
+});
 
 saveButton.addEventListener('click', async () => {
   if (!selected || exporting) return;
