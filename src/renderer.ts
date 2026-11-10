@@ -65,7 +65,7 @@ export function createRenderer(canvas: HTMLCanvasElement, onError: (error: unkno
           try {
             const dt = previousTime === undefined ? 0 : Math.min(Math.max((time - previousTime) / 1000, 0), 0.05);
             previousTime = time;
-            current!.update(dt);
+            if (dt > 0) current!.update(dt);
             if (current!.done()) {
               current!.stop();
               current = spawn();

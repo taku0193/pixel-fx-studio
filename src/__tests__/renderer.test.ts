@@ -177,7 +177,7 @@ describe('renderer lifecycle', () => {
     expect(renderer.isPaused).toBe(false);
     expect(callbacks.size).toBe(1);
     advance(61016);
-    expect(instances[0].update).toHaveBeenLastCalledWith(0);
+    expect(instances[0].update).toHaveBeenCalledOnce();
     advance(61032);
     expect(instances[0].update).toHaveBeenLastCalledWith(0.016);
     expect(createFx).toHaveBeenCalledOnce();
@@ -210,6 +210,8 @@ describe('renderer lifecycle', () => {
     renderer.resume();
     advance(1000);
     expect(instances[0].update).not.toHaveBeenCalled();
+    expect(instances[1].update).not.toHaveBeenCalled();
+    advance(1016);
     expect(instances[1].update).toHaveBeenCalledOnce();
     renderer.dispose();
   });
@@ -239,5 +241,23 @@ describe('renderer lifecycle', () => {
     renderer.pause();
     expect(callbacks.size).toBe(0);
     expect(createFx).toHaveBeenCalledOnce();
+  });
+
+  it('never sends a zero-duration update to effects that calculate velocities', () => {
+    const onError = vi.fn();
+    const renderer = createRenderer(canvas, onError);
+    renderer.select(effects[0]);
+    vi.mocked(instances[0].update).mockImplementation((dt) => {
+      if (dt <= 0) throw new Error('Cannot calculate velocity for zero time');
+    });
+    advance(1000);
+    expect(onError).not.toHaveBeenCalled();
+    advance(1016);
+    renderer.pause();
+    renderer.resume();
+    advance(60000);
+    expect(onError).not.toHaveBeenCalled();
+    expect(callbacks.size).toBe(1);
+    renderer.dispose();
   });
 });
