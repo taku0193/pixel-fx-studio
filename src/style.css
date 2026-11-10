@@ -47,6 +47,11 @@ input:checked ~ .choice-indicator { border: 3px solid var(--accent); background:
 .selection-note { margin: 20px 0 0; color: #8f96a2; line-height: 1.9; font-size: 11px; }
 .preview-panel { border: 1px solid #30343c; border-radius: 12px; overflow: hidden; background: #181b20; }
 .preview-toolbar { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #30343c; }
+.preview-actions { display: flex; align-items: center; gap: 18px; }
+.save-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 0 13px; border: 1px solid #b5e5cb; border-radius: 6px; background: #b5e5cb; color: #17271e; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.save-button:hover { background: #c9f0da; }
+.save-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.save-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .preview-heading { display: flex; align-items: center; gap: 14px; }
 .preview-label { font-size: 10px; color: #939ba8; border-right: 1px solid #3b4049; padding-right: 14px; }
 h2 { font-size: 13px; font-weight: 500; margin: 0; }
@@ -62,6 +67,8 @@ canvas { display: block; width: min(100%, 480px); height: auto; image-rendering:
 .unit { color: #6f7885; }
 .message { font-size: 12px; padding: 14px 18px; border-radius: 8px; line-height: 1.7; }
 .error-message { background: #311e24; color: #ffc0c4; border: 1px solid #763e4b; }
+.save-status { color: #b5d6c3; font-size: 11px; margin: 16px 0 0; }
+.save-status:empty { display: none; }
 footer { display: flex; justify-content: space-between; gap: 16px; padding: 26px 0; color: #79818e; font-size: 10px; line-height: 1.8; }
 footer a { text-decoration-color: #4f5864; text-underline-offset: 3px; }
 a:focus-visible, button:focus-visible { outline: 2px solid #b5e5cb; outline-offset: 4px; }
@@ -85,7 +92,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid #b5e5cb; outline-offs
   .effect-label small { font-size: 7px; letter-spacing: 0.8px; }
   .effect-icon { width: 30px; height: 30px; flex-basis: 30px; }
   .choice-indicator { right: 9px; top: 11px; }
-  .preview-toolbar { padding: 16px; }
+  .preview-toolbar { padding: 16px; flex-wrap: wrap; }
+  .preview-actions { width: 100%; justify-content: space-between; }
   .preview-heading { gap: 10px; }
   .preview-label { padding-right: 10px; }
   .preview-stage { padding: 10px 0; }
