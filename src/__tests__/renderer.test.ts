@@ -51,9 +51,9 @@ describe('renderer lifecycle', () => {
     const renderer = createRenderer(canvas);
     renderer.select(effects[0]);
     expect(putImageData).toHaveBeenCalledTimes(1);
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < effects.length * 2; i++) {
       const previous = instances.at(-1)!;
-      renderer.select(effects[i % 3]);
+      renderer.select(effects[i % effects.length]);
       expect(previous.stop).toHaveBeenCalledOnce();
       expect(callbacks.size).toBe(1);
     }

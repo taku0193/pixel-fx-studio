@@ -39,3 +39,42 @@ declare module 'pixelfx/fx/fire/campfire' {
 declare module 'pixelfx/fx/lightning/lightning-strike' {
   export const meta: import('pixelfx').EffectModule['meta'];
 }
+declare module 'pixelfx/fx/fire/fire-tornado' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/water/waterfall' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/water/water-orb' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/explosions/firework-burst' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/arcane/portal' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/holy/halo' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/shadow/black-hole' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/nature/leaf-storm' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/weather/rain' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/weather/aurora' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/scifi/energy-core' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/pickups/gem-spin' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/critters/butterfly' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
