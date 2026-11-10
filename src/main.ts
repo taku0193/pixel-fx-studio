@@ -1,5 +1,5 @@
 import './style.css';
-import { categories, effects, getEffect, getEffectsByCategory, type Effect } from './effects';
+import { categories, categoryLabels, effects, getEffect, getEffectsByCategory, searchEffects, type Effect } from './effects';
 import { exportPng } from './export-png';
 import { createRenderer } from './renderer';
 
@@ -25,6 +25,9 @@ const icons: Record<Effect['category'], string> = {
   SPAWN: '<path d="M6 3v13m12-13v13m-6-9v11M8 3h8M3 19c4 4 14 4 18 0M9 11l3-3 3 3"/>',
   STATUS: '<circle cx="7" cy="8" r="3"/><circle cx="17" cy="5" r="2"/><circle cx="15" cy="16" r="5"/><path d="M4 18h3m-1.5-1.5v3"/>',
   UI: '<path d="m3 21 5-13 8 8-13 5Zm8-17 2-2m3 6 5-1m-2 6 3 2M8 8l8 8M6 14l4 4M13 5l2 2"/>',
+  MOVES: '<path d="m3 4 11 9-2 3L2 5l1-1Zm8 13 6-6m-1 7 5 4m-3-6 4 5M4 15l4-4m0 10 4-4"/>',
+  IMPACTS: '<path d="m12 2 2 7 7-3-4 6 5 5-8-1-2 7-3-7-7 2 4-6-4-6 7 3 3-7Z"/>',
+  TRANSITIONS: '<path d="M2 4h20v16H2V4Zm10 0v16M5 8h4m-4 4h4m-4 4h4m6-8h4m-4 8h4"/>',
 };
 
 app.innerHTML = `
@@ -47,10 +50,12 @@ app.innerHTML = `
       <aside class="effects-panel">
         <fieldset>
           <legend>エフェクト <span class="count">${String(effects.length).padStart(2, '0')}</span></legend>
+          <label class="filter-label" for="effect-search">エフェクトを検索</label>
+          <input class="effect-search" id="effect-search" type="search" placeholder="名前・タグ・カテゴリで検索" autocomplete="off">
           <label class="filter-label" for="category-filter">カテゴリ</label>
           <select class="category-filter" id="category-filter">
             <option value="all">すべてのカテゴリ (${effects.length})</option>
-            ${categories.map((category) => `<option value="${category}">${category} (${getEffectsByCategory(category).length})</option>`).join('')}
+            ${categories.map((category) => `<option value="${category}">${categoryLabels[category]} / ${category} (${getEffectsByCategory(category).length})</option>`).join('')}
           </select>
           <p class="catalog-hint">スクロールして、ほかのエフェクトへ。</p>
           <div class="effect-list" aria-label="エフェクト一覧">
@@ -58,11 +63,12 @@ app.innerHTML = `
               <label class="effect-choice ${effect.category.toLowerCase()}">
                 <input type="radio" name="effect" value="${effect.id}" ${index === 0 ? 'checked' : ''}>
                 <span class="effect-icon"><svg viewBox="0 0 24 24" aria-hidden="true">${icons[effect.category]}</svg></span>
-                <span class="effect-label"><small>${effect.category}</small><strong>${effect.name}</strong></span>
+                <span class="effect-label"><small>${effect.category}</small><strong title="${effect.name}">${effect.name}</strong></span>
                 <span class="choice-indicator" aria-hidden="true"></span>
               </label>
             `).join('')}
           </div>
+          <p class="catalog-empty" role="status" hidden>一致するエフェクトがありません。検索語やカテゴリを変えてください。</p>
         </fieldset>
         <p class="selection-note">一時停止で、瞬間をじっくり。<br>気に入ったフレームを保存できます。</p>
       </aside>
@@ -76,7 +82,7 @@ app.innerHTML = `
           </div>
         </div>
         <div class="preview-stage"><canvas id="effect-preview" width="320" height="288"></canvas></div>
-        <div class="preview-caption"><p id="effect-description">${effects[0].description}</p><span>320 × 288 <span class="unit">PX</span></span></div>
+        <div class="preview-caption"><p id="effect-description">${effects[0].description}</p><span class="preview-dimensions">320 × 288 <span class="unit">PX</span></span></div>
       </section>
     </div>
     <p class="message error-message" role="alert" hidden></p>
@@ -94,11 +100,14 @@ const playbackStatus = app.querySelector<HTMLSpanElement>('.playback-status')!;
 const playbackButton = app.querySelector<HTMLButtonElement>('.playback-button')!;
 const inputs = [...app.querySelectorAll<HTMLInputElement>('input[name="effect"]')];
 const categoryFilter = app.querySelector<HTMLSelectElement>('#category-filter')!;
+const searchInput = app.querySelector<HTMLInputElement>('#effect-search')!;
 const effectList = app.querySelector<HTMLDivElement>('.effect-list')!;
 const catalogCount = app.querySelector<HTMLSpanElement>('.count')!;
 const catalogHint = app.querySelector<HTMLParagraphElement>('.catalog-hint')!;
+const catalogEmpty = app.querySelector<HTMLParagraphElement>('.catalog-empty')!;
+const previewDimensions = app.querySelector<HTMLSpanElement>('.preview-dimensions')!;
 const saveButton = app.querySelector<HTMLButtonElement>('.save-button')!;
-const saveStatus = app.querySelector<HTMLParagraphElement>('[role="status"]')!;
+const saveStatus = app.querySelector<HTMLParagraphElement>('.save-status')!;
 let selected: Effect | undefined;
 let exporting = false;
 
@@ -139,6 +148,7 @@ function selectEffect(id: string) {
     name.textContent = effect.name;
     description.textContent = effect.description;
     canvas.setAttribute('aria-label', `${effect.name} のアニメーション`);
+    previewDimensions.innerHTML = `${canvas.width} × ${canvas.height} <span class="unit">PX</span>`;
     errorMessage.hidden = true;
     updatePlaybackUi();
     saveButton.disabled = exporting;
@@ -153,13 +163,14 @@ inputs.forEach((input) => {
 });
 selectEffect(effects[0].id);
 
-categoryFilter.addEventListener('change', () => {
-  const visible = getEffectsByCategory(categoryFilter.value);
+function updateCatalog() {
+  const visible = searchEffects(searchInput.value, categoryFilter.value);
   const visibleIds = new Set<string>(visible.map((effect) => effect.id));
   inputs.forEach((input) => { input.closest<HTMLLabelElement>('label')!.hidden = !visibleIds.has(input.value); });
-  const all = categoryFilter.value === 'all';
+  const all = categoryFilter.value === 'all' && !searchInput.value.trim();
   catalogCount.textContent = all ? String(effects.length) : `${visible.length}/${effects.length}`;
   catalogHint.textContent = all ? 'スクロールして、ほかのエフェクトへ。' : `${visible.length}種類のエフェクトを表示中。`;
+  catalogEmpty.hidden = visible.length > 0;
   if (selected && !visibleIds.has(selected.id) && visible[0]) {
     inputs.find((input) => input.value === visible[0].id)!.checked = true;
     selectEffect(visible[0].id);
@@ -171,7 +182,9 @@ categoryFilter.addEventListener('change', () => {
     const card = activeLabel.getBoundingClientRect();
     if (card.bottom > viewport.bottom) effectList.scrollTop += card.bottom - viewport.bottom + 6;
   }
-});
+}
+categoryFilter.addEventListener('change', updateCatalog);
+searchInput.addEventListener('input', updateCatalog);
 
 playbackButton.addEventListener('click', () => {
   if (!renderer || playbackButton.disabled) return;

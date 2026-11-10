@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFx, type LiveEffect } from 'pixelfx';
-import { effects } from '../effects';
+import { createAct, createFx, type LiveEffect } from 'pixelfx';
+import { effects, getEffect } from '../effects';
 import { createRenderer } from '../renderer';
 
 vi.mock('pixelfx', async (importOriginal) => ({
   ...await importOriginal<typeof import('pixelfx')>(),
   createFx: vi.fn(),
+  createAct: vi.fn(),
 }));
 
 let callbacks: Map<number, FrameRequestCallback>;
@@ -30,15 +31,17 @@ beforeEach(() => {
     return nextId;
   }));
   vi.stubGlobal('cancelAnimationFrame', vi.fn((id: number) => callbacks.delete(id)));
-  vi.mocked(createFx).mockImplementation(() => {
+  const makeInstance = () => {
     const effect = { update: vi.fn(), draw: vi.fn(), stop: vi.fn(), done: vi.fn(() => false) };
     instances.push(effect);
     return effect;
-  });
+  };
+  vi.mocked(createFx).mockImplementation(makeInstance);
+  vi.mocked(createAct).mockImplementation(makeInstance);
   canvas = {
     width: 320, height: 288,
     getContext: vi.fn(() => ({
-      createImageData: () => ({ data: new Uint8ClampedArray(320 * 288 * 4) }),
+      createImageData: (w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4) }),
       putImageData,
     })),
   } as unknown as HTMLCanvasElement;
@@ -47,6 +50,23 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('renderer lifecycle', () => {
+  it('resizes for large effects and returns to the original size for small ones', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(getEffect('explosions/nuke')!);
+    expect([canvas.width, canvas.height]).toEqual([400, 320]);
+    renderer.select(effects[0]);
+    expect([canvas.width, canvas.height]).toEqual([320, 288]);
+    renderer.dispose();
+  });
+
+  it('uses the official actor player for complete moves and draws it once', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(getEffect('moves/sword-combo')!);
+    expect(createAct).toHaveBeenCalledOnce();
+    expect(createFx).not.toHaveBeenCalled();
+    expect(instances[0].draw).toHaveBeenCalledOnce();
+    renderer.dispose();
+  });
   it('draws immediately and keeps exactly one loop during rapid switching', () => {
     const renderer = createRenderer(canvas);
     renderer.select(effects[0]);

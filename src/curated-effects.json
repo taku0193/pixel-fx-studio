@@ -1,0 +1,130 @@
+[
+  {
+    "id": "ice/frost-nova",
+    "description": "冷気を集めて、氷の結晶を解き放つ。"
+  },
+  {
+    "id": "fire/campfire",
+    "description": "揺らぐ炎と、ゆっくり舞い上がる火の粉。"
+  },
+  {
+    "id": "lightning/lightning-strike",
+    "description": "光る魔法陣に、一筋の雷が落ちる。"
+  },
+  {
+    "id": "fire/fire-tornado",
+    "description": "火の粉を巻き込み、炎の竜巻が渦を描く。"
+  },
+  {
+    "id": "water/waterfall",
+    "description": "岩から流れ落ちる水が、水しぶきと波紋を広げる。"
+  },
+  {
+    "id": "water/water-orb",
+    "description": "浮かぶ水の球が揺れ、光としずくをこぼす。"
+  },
+  {
+    "id": "explosions/firework-burst",
+    "description": "色とりどりの花火が開き、きらめく星が降り注ぐ。"
+  },
+  {
+    "id": "arcane/portal",
+    "description": "渦を巻く魔法のポータルが、光を放ちながら開く。"
+  },
+  {
+    "id": "holy/halo",
+    "description": "やわらかな金色の光輪が、静かに輝く。"
+  },
+  {
+    "id": "shadow/black-hole",
+    "description": "暗い中心へ光と粒子が吸い込まれていく。"
+  },
+  {
+    "id": "nature/leaf-storm",
+    "description": "緑の葉が風に乗り、小さな嵐をつくる。"
+  },
+  {
+    "id": "weather/rain",
+    "description": "降り続く雨が、地面に小さな水しぶきを散らす。"
+  },
+  {
+    "id": "weather/aurora",
+    "description": "色の帯が夜空をゆっくりと揺らめく。"
+  },
+  {
+    "id": "scifi/energy-core",
+    "description": "金属のケージに包まれたコアが、脈打ち放電する。"
+  },
+  {
+    "id": "pickups/gem-spin",
+    "description": "くるりと回る宝石の面に、きらりと光が走る。"
+  },
+  {
+    "id": "critters/butterfly",
+    "description": "小さな蝶が羽ばたき、ふわりと飛び回る。"
+  },
+  {
+    "id": "fire/meteor",
+    "description": "炎をまとった隕石が落下し、火花と煙を巻き上げる。"
+  },
+  {
+    "id": "fire/spirit-flame",
+    "description": "青緑の霊火が浮かび、冷たい火の粉をこぼす。"
+  },
+  {
+    "id": "ice/ice-crystal",
+    "description": "浮かぶ氷の結晶が回り、冷たい光をきらめかせる。"
+  },
+  {
+    "id": "lightning/ball-lightning",
+    "description": "雷の球が漂い、周囲へ細い稲妻を放つ。"
+  },
+  {
+    "id": "water/geyser",
+    "description": "水面が盛り上がり、白い水柱が勢いよく噴き出す。"
+  },
+  {
+    "id": "explosions/plasma-explosion",
+    "description": "青紫のエネルギーが弾け、光の衝撃波を広げる。"
+  },
+  {
+    "id": "arcane/rune-circle",
+    "description": "床に浮かぶルーン文字が、光を追いながら回る。"
+  },
+  {
+    "id": "holy/heal",
+    "description": "光の花と輪が広がり、回復のきらめきが舞い上がる。"
+  },
+  {
+    "id": "nature/tornado",
+    "description": "風の渦がうねり、葉と砂ぼこりを巻き上げる。"
+  },
+  {
+    "id": "weather/cherry-blossoms",
+    "description": "春の風に乗って、桜の花びらがひらひらと舞う。"
+  },
+  {
+    "id": "critters/ghost",
+    "description": "小さな幽霊がふわふわ漂い、こちらを見回す。"
+  },
+  {
+    "id": "melee/sword-slash",
+    "description": "鋭い三日月の剣閃が走り、青い軌跡を残す。"
+  },
+  {
+    "id": "projectiles/magic-missile",
+    "description": "集まった魔力が光の弾となり、尾を引いて飛ぶ。"
+  },
+  {
+    "id": "spawn/respawn-beam",
+    "description": "光の柱と走査線が、復活の姿を描き出す。"
+  },
+  {
+    "id": "status/poisoned",
+    "description": "緑の毒の波としずくが、体を包み込む。"
+  },
+  {
+    "id": "ui/confetti",
+    "description": "クラッカーから色とりどりの紙吹雪が飛び出す。"
+  }
+]

@@ -1,32 +1,34 @@
 import { describe, expect, it } from 'vitest';
-import { clearFrame, composite, createFrame, createFx } from 'pixelfx';
+import { actSpan, clearFrame, composite, createFrame } from 'pixelfx';
 import { effects } from '../effects';
+import { createPreview, getPreviewLayout } from '../preview';
 
 describe('real pixelfx effects', () => {
   it.each(effects)('renders visible, changing pixels for $name', (effect) => {
-    const frame = createFrame(320, 288);
-    const { size, origin } = effect.module.meta;
-    const instance = createFx(effect.module, {
-      x: (320 - size[0]) / 2 + origin[0],
-      y: (288 - size[1]) / 2 + origin[1],
-    });
+    const layout = getPreviewLayout(effect);
+    const frame = createFrame(layout.width, layout.height);
+    const instance = createPreview(effect, layout);
+    const span = effect.category === 'MOVES' ? actSpan(effect.module) : { from: 0, to: effect.module.meta.duration };
+    const duration = span.to - span.from;
+    const empty = new Uint8ClampedArray(frame.w * frame.h * 4);
+    composite(frame, empty, instance.background);
     const snapshots: Uint8ClampedArray[] = [];
     let step = 0;
     let maxVisible = 0;
     try {
-      for (const checkpoint of [15, 45, 75]) {
+      for (const fraction of [0.12, 0.4, 0.72]) {
+        const checkpoint = Math.ceil(duration * fraction * 120);
         while (step < checkpoint) {
-          instance.update(1 / 60);
+          instance.update(1 / 120);
           step++;
         }
         clearFrame(frame);
-        instance.draw(frame, 'back');
-        instance.draw(frame, 'front');
-        const pixels = new Uint8ClampedArray(320 * 288 * 4);
-        composite(frame, pixels, 0x1c1714);
+        instance.draw(frame);
+        const pixels = new Uint8ClampedArray(frame.w * frame.h * 4);
+        composite(frame, pixels, instance.background);
         let visible = 0;
         for (let i = 0; i < pixels.length; i += 4) {
-          if (pixels[i] !== 20 || pixels[i + 1] !== 23 || pixels[i + 2] !== 28) visible++;
+          if (pixels[i] !== empty[i] || pixels[i + 1] !== empty[i + 1] || pixels[i + 2] !== empty[i + 2]) visible++;
         }
         maxVisible = Math.max(maxVisible, visible);
         snapshots.push(pixels);

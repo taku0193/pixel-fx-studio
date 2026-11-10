@@ -1,12 +1,15 @@
-import { clearFrame, composite, createFrame, createFx, type LiveEffect } from 'pixelfx';
+import { clearFrame, composite, createFrame } from 'pixelfx';
 import type { Effect } from './effects';
+import { createPreview, getPreviewLayout } from './preview';
 
 export function createRenderer(canvas: HTMLCanvasElement, onError: (error: unknown) => void = () => {}) {
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvasの描画を開始できません。対応するブラウザで開いてください。');
-  const frame = createFrame(canvas.width, canvas.height);
-  const image = context.createImageData(canvas.width, canvas.height);
-  let current: LiveEffect | undefined;
+  const minWidth = canvas.width;
+  const minHeight = canvas.height;
+  let frame = createFrame(canvas.width, canvas.height);
+  let image = context.createImageData(canvas.width, canvas.height);
+  let current: ReturnType<typeof createPreview> | undefined;
   let request: number | undefined;
   let generation = 0;
   let disposed = false;
@@ -28,10 +31,8 @@ export function createRenderer(canvas: HTMLCanvasElement, onError: (error: unkno
 
   function paint() {
     clearFrame(frame);
-    current!.draw(frame, 'back');
-    current!.draw(frame, 'front');
-    // pixelfx colors are packed as 0xBBGGRR: #14171c.
-    composite(frame, image.data, 0x1c1714);
+    current!.draw(frame);
+    composite(frame, image.data, current!.background);
     context!.putImageData(image, 0, 0);
   }
 
@@ -39,11 +40,14 @@ export function createRenderer(canvas: HTMLCanvasElement, onError: (error: unkno
     select(effect: Effect) {
       if (disposed) return;
       stop();
-      const { size, origin } = effect.module.meta;
-      const spawn = () => createFx(effect.module, {
-        x: (canvas.width - size[0]) / 2 + origin[0],
-        y: (canvas.height - size[1]) / 2 + origin[1],
-      });
+      const layout = getPreviewLayout(effect, minWidth, minHeight);
+      if (canvas.width !== layout.width || canvas.height !== layout.height) {
+        canvas.width = layout.width;
+        canvas.height = layout.height;
+        frame = createFrame(layout.width, layout.height);
+        image = context!.createImageData(layout.width, layout.height);
+      }
+      const spawn = () => createPreview(effect, layout);
       try {
         current = spawn();
         paint();
