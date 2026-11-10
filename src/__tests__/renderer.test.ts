@@ -50,6 +50,61 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('renderer lifecycle', () => {
+  it('pauses and advances exactly one effect frame without starting another loop', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    renderer.step();
+    expect(renderer.isPaused).toBe(true);
+    expect(callbacks.size).toBe(0);
+    expect(instances[0].update).toHaveBeenCalledExactlyOnceWith(1 / effects[0].module.meta.fps);
+    expect(renderer.frame).toBe(1);
+    expect(renderer.elapsed).toBeCloseTo(1 / 30);
+    expect(putImageData).toHaveBeenCalledTimes(2);
+    renderer.dispose();
+  });
+
+  it('restarts from frame zero while preserving pause and never duplicates playback', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    renderer.step();
+    renderer.step();
+    const previous = instances[0];
+    renderer.restart();
+    expect(previous.stop).toHaveBeenCalledOnce();
+    expect(renderer.frame).toBe(0);
+    expect(renderer.elapsed).toBe(0);
+    expect(renderer.isPaused).toBe(true);
+    expect(callbacks.size).toBe(0);
+    renderer.resume();
+    renderer.restart();
+    expect(renderer.isPaused).toBe(false);
+    expect(callbacks.size).toBe(1);
+    renderer.dispose();
+  });
+
+  it('reports playback frames for UI counters through the existing render loop', () => {
+    const onFrame = vi.fn();
+    const renderer = createRenderer(canvas, vi.fn(), onFrame);
+    renderer.select(effects[0]);
+    expect(onFrame).toHaveBeenLastCalledWith({ elapsed: 0, frame: 0, fps: 30, paused: false });
+    renderer.step();
+    expect(onFrame).toHaveBeenLastCalledWith({ elapsed: 1 / 30, frame: 1, fps: 30, paused: true });
+    renderer.dispose();
+  });
+
+  it('ignores frame controls before selection and after disposal', () => {
+    const renderer = createRenderer(canvas);
+    renderer.step();
+    renderer.restart();
+    expect(createFx).not.toHaveBeenCalled();
+    renderer.select(effects[0]);
+    renderer.dispose();
+    renderer.step();
+    renderer.restart();
+    expect(createFx).toHaveBeenCalledOnce();
+    expect(callbacks.size).toBe(0);
+  });
+
   it('resizes for large effects and returns to the original size for small ones', () => {
     const renderer = createRenderer(canvas);
     renderer.select(getEffect('explosions/nuke')!);

@@ -3,6 +3,19 @@ import { effects as upstreamEffects } from 'pixelfx/fx/index';
 import { categories, effects, getEffect, getEffectsByCategory, searchEffects } from '../effects';
 
 describe('effect catalog', () => {
+  it('provides a Japanese label for every effect', () => {
+    for (const effect of effects) {
+      expect(effect.label).toMatch(/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u);
+    }
+  });
+
+  it('finds effects by Japanese names, beyond the category name', () => {
+    expect(searchEffects('雪').map((effect) => effect.id)).toEqual(expect.arrayContaining([
+      'weather/snow', 'weather/blizzard', 'ice/snowflake-burst',
+    ]));
+    expect(searchEffects('クラゲ').map((effect) => effect.id)).toEqual(['critters/jellyfish']);
+  });
+
   it('includes all 244 upstream effects while retaining the original selection order', () => {
     expect(effects.slice(0, 32).map((effect) => effect.id)).toEqual([
       'ice/frost-nova', 'fire/campfire', 'lightning/lightning-strike',
