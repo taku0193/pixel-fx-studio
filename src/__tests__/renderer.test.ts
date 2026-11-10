@@ -125,4 +125,99 @@ describe('renderer lifecycle', () => {
     vi.mocked(canvas.getContext).mockReturnValue(null);
     expect(() => createRenderer(canvas)).toThrow('Canvas');
   });
+
+  it('pauses on the current frame without stopping or discarding the effect', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    advance(1000);
+    advance(1016);
+    const stale = [...callbacks.values()][0];
+    const drawCount = putImageData.mock.calls.length;
+    const updateCount = vi.mocked(instances[0].update).mock.calls.length;
+    renderer.pause();
+    renderer.pause();
+    expect(renderer.isPaused).toBe(true);
+    expect(callbacks.size).toBe(0);
+    advance(60000);
+    stale(60000);
+    expect(putImageData).toHaveBeenCalledTimes(drawCount);
+    expect(instances[0].update).toHaveBeenCalledTimes(updateCount);
+    expect(instances[0].stop).not.toHaveBeenCalled();
+    renderer.dispose();
+  });
+
+  it('resumes the same instance without adding the time spent paused', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    advance(1000);
+    advance(1016);
+    renderer.pause();
+    renderer.resume();
+    renderer.resume();
+    expect(renderer.isPaused).toBe(false);
+    expect(callbacks.size).toBe(1);
+    advance(61016);
+    expect(instances[0].update).toHaveBeenLastCalledWith(0);
+    advance(61032);
+    expect(instances[0].update).toHaveBeenLastCalledWith(0.016);
+    expect(createFx).toHaveBeenCalledOnce();
+    expect(instances[0].stop).not.toHaveBeenCalled();
+    renderer.dispose();
+  });
+
+  it('ignores callbacks queued before a pause even after resuming', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    const stale = [...callbacks.values()][0];
+    renderer.pause();
+    renderer.resume();
+    const count = putImageData.mock.calls.length;
+    stale(1000);
+    expect(putImageData).toHaveBeenCalledTimes(count);
+    expect(callbacks.size).toBe(1);
+    renderer.dispose();
+  });
+
+  it('preserves pause when selecting a different effect', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    renderer.pause();
+    renderer.select(effects[1]);
+    expect(renderer.isPaused).toBe(true);
+    expect(instances[0].stop).toHaveBeenCalledOnce();
+    expect(putImageData).toHaveBeenCalledTimes(2);
+    expect(callbacks.size).toBe(0);
+    renderer.resume();
+    advance(1000);
+    expect(instances[0].update).not.toHaveBeenCalled();
+    expect(instances[1].update).toHaveBeenCalledOnce();
+    renderer.dispose();
+  });
+
+  it('keeps one loop after repeated pause and resume operations', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    for (let i = 0; i < 30; i++) {
+      renderer.pause();
+      expect(callbacks.size).toBe(0);
+      renderer.resume();
+      expect(callbacks.size).toBe(1);
+    }
+    expect(createFx).toHaveBeenCalledOnce();
+    renderer.dispose();
+  });
+
+  it('does not start playback before selection or after disposal', () => {
+    const renderer = createRenderer(canvas);
+    renderer.pause();
+    renderer.resume();
+    expect(callbacks.size).toBe(0);
+    renderer.select(effects[0]);
+    renderer.pause();
+    renderer.dispose();
+    renderer.resume();
+    renderer.pause();
+    expect(callbacks.size).toBe(0);
+    expect(createFx).toHaveBeenCalledOnce();
+  });
 });

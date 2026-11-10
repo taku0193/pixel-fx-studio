@@ -10,13 +10,20 @@ export function createRenderer(canvas: HTMLCanvasElement, onError: (error: unkno
   let request: number | undefined;
   let generation = 0;
   let disposed = false;
+  let paused = false;
+  let startPlayback: (() => void) | undefined;
 
-  function stop() {
+  function cancelLoop() {
     generation++;
     if (request !== undefined) cancelAnimationFrame(request);
     request = undefined;
+  }
+
+  function stop() {
+    cancelLoop();
     current?.stop();
     current = undefined;
+    startPlayback = undefined;
   }
 
   function paint() {
@@ -32,13 +39,11 @@ export function createRenderer(canvas: HTMLCanvasElement, onError: (error: unkno
     select(effect: Effect) {
       if (disposed) return;
       stop();
-      const token = generation;
       const { size, origin } = effect.module.meta;
       const spawn = () => createFx(effect.module, {
         x: (canvas.width - size[0]) / 2 + origin[0],
         y: (canvas.height - size[1]) / 2 + origin[1],
       });
-      let previousTime: number | undefined;
       try {
         current = spawn();
         paint();
@@ -46,25 +51,44 @@ export function createRenderer(canvas: HTMLCanvasElement, onError: (error: unkno
         stop();
         throw error;
       }
-      function tick(time: number) {
-        if (disposed || token !== generation) return;
-        request = undefined;
-        try {
-          const dt = previousTime === undefined ? 0 : Math.min(Math.max((time - previousTime) / 1000, 0), 0.05);
-          previousTime = time;
-          current!.update(dt);
-          if (current!.done()) {
-            current!.stop();
-            current = spawn();
+      startPlayback = () => {
+        const token = generation;
+        // Start a fresh clock on resume, keeping the existing effect and its simulation time.
+        let previousTime: number | undefined;
+        function tick(time: number) {
+          if (disposed || paused || token !== generation) return;
+          request = undefined;
+          try {
+            const dt = previousTime === undefined ? 0 : Math.min(Math.max((time - previousTime) / 1000, 0), 0.05);
+            previousTime = time;
+            current!.update(dt);
+            if (current!.done()) {
+              current!.stop();
+              current = spawn();
+            }
+            paint();
+            request = requestAnimationFrame(tick);
+          } catch (error) {
+            stop();
+            onError(error);
           }
-          paint();
-          request = requestAnimationFrame(tick);
-        } catch (error) {
-          stop();
-          onError(error);
         }
-      }
-      request = requestAnimationFrame(tick);
+        request = requestAnimationFrame(tick);
+      };
+      if (!paused) startPlayback();
+    },
+    get isPaused() {
+      return paused;
+    },
+    pause() {
+      if (disposed || !current || paused) return;
+      paused = true;
+      cancelLoop();
+    },
+    resume() {
+      if (disposed || !current || !paused) return;
+      paused = false;
+      startPlayback!();
     },
     dispose() {
       if (disposed) return;

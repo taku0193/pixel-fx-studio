@@ -67,3 +67,11 @@ Codexは各段階で日付、変更点、テストコマンド、結果、未解
 - 配布・依存: `index.html`, `public/favicon.svg`, `public/THIRD_PARTY_NOTICES.txt`, `package.json`, `package-lock.json`, `.gitignore`。
 - 説明・記録: `README.md`, `docs/TEST_PLAN.md`, `docs/WORK_LOG.md`。
 - 元の指示書・仕様・AGENTSはスターターの内容を維持。
+
+## 2026-11-10 — 追加機能: 一時停止・再開（描画処理）
+
+- 利用者の追加機能の依頼に対し、仕様書P2の追加候補だった一時停止・再開を実装。
+- 先に6テストを追加し、pause未実装による6件の失敗を確認してから実装。
+- pauseは現在のインスタンスとCanvasを維持して描画予約を解除し、resumeは同じインスタンスを新しい時計で再開。停止中の時間はシミュレーションへ加算しない。
+- 停止前の古いコールバック、30回の停止・再開、停止中の効果切り替え、破棄後の操作を検証。効果を切り替えても一時停止状態を保つ。
+- `npm test`: 3ファイル・22テスト成功。`npm run build`: 型検査と本番ビルド成功。`git diff --check`: 成功。
