@@ -1,6 +1,6 @@
 # Pixel FX Studio
 
-[pixelfx](https://github.com/patch-gg/pixelfx)の既存エフェクトを選択・再生し、表示中のフレームをPNGとして保存するローカルWebアプリです。
+[pixelfx](https://github.com/patch-gg/pixelfx)の既存エフェクト16種類（13カテゴリ）を選択・再生し、表示中のフレームをPNGとして保存するローカルWebアプリです。
 
 ## 起動
 
@@ -21,8 +21,8 @@ npm run dev -- --host 127.0.0.1 --port 5180
 
 ## 使い方
 
-1. 左側の3種類からエフェクトを選びます。キーボードではTabで選択欄に移動し、矢印キーで切り替えられます。
-2. 選択したエフェクトが1枚のCanvas上で自動再生されます。氷・雷の単発エフェクトは終了後に再生成して繰り返します。
+1. エフェクト一覧をスクロールして16種類から選びます。キーボードではTabで選択欄に移動し、矢印キーで切り替えられます。スマートフォンでは3列の一覧をスクロールできます。
+2. 選択したエフェクトが1枚のCanvas上で自動再生されます。単発エフェクトは終了後に再生成して繰り返します。
 3. **一時停止**を押すと、その瞬間のフレームを固定できます。**再生**で続きから再開します。
 4. **PNGを保存**を押すと、表示中のCanvasをダウンロードします。一時停止中も保存できます。
 
@@ -35,6 +35,19 @@ npm run dev -- --host 127.0.0.1 --port 5180
 | Frost nova | `pixelfx/fx/ice/frost-nova` | 3.4秒 |
 | Campfire | `pixelfx/fx/fire/campfire` | 3秒・ループ |
 | Lightning strike | `pixelfx/fx/lightning/lightning-strike` | 3秒 |
+| Fire tornado | `pixelfx/fx/fire/fire-tornado` | 2秒・ループ |
+| Waterfall | `pixelfx/fx/water/waterfall` | 2秒・ループ |
+| Water orb | `pixelfx/fx/water/water-orb` | 3秒・ループ |
+| Firework burst | `pixelfx/fx/explosions/firework-burst` | 3.6秒 |
+| Portal | `pixelfx/fx/arcane/portal` | 2.4秒・ループ |
+| Halo | `pixelfx/fx/holy/halo` | 2秒・ループ |
+| Black hole | `pixelfx/fx/shadow/black-hole` | 4秒・ループ |
+| Leaf storm | `pixelfx/fx/nature/leaf-storm` | 2.4秒・ループ |
+| Rain | `pixelfx/fx/weather/rain` | 8秒・ループ |
+| Aurora | `pixelfx/fx/weather/aurora` | 12秒・ループ |
+| Energy core | `pixelfx/fx/scifi/energy-core` | 2.4秒・ループ |
+| Gem spin | `pixelfx/fx/pickups/gem-spin` | 2.4秒・ループ |
+| Butterfly | `pixelfx/fx/critters/butterfly` | 3.2秒・ループ |
 
 雷の元サイズが240×264pxのため、共通Canvasを320×288pxにしています。各モジュールの `meta.size` と `meta.origin` を使い、エフェクト全体が収まるように配置しています。
 
@@ -55,25 +68,24 @@ npm run preview -- --host 127.0.0.1
 
 2026-11-10の検証結果:
 
-- Vitest: 3ファイル、22テスト成功。
+- Vitest: 4ファイル、38テスト成功。全16種類の実描画と時間によるピクセル変化もテスト。
 - TypeScriptの型検査とViteの本番ビルド成功。
 - 空の一時フォルダでも `npm ci` → `npm test` → `npm run build` が成功。依存検査は0件。
-- 実ブラウザ: 3種類の選択・アニメーション・30回連続切り替え・矢印キー操作・保存失敗時の表示を確認。
-- 3種類とも5秒間の一時停止でフレームが変わらないこと、再開すると動くこと、停止中の効果切り替え、Spaceキーでの再開を確認。
-- 3種類のPNGをダウンロードしてデコードし、画像サイズ・描画ピクセル数・比較値がクリック時のCanvasと一致することを確認。保存画像も目視確認。
-- 一時停止中のPNGも3種類とも保存し、停止フレームと比較値が一致することを確認。
-- 画面幅1024/800/760/375/320pxで横方向にはみ出さないことを確認。
+- 実ブラウザ: 全16種類の選択・アニメーション・一時停止・PNG保存・ファイル名を確認。矢印キー操作と保存失敗時の表示も確認済み。
+- 一時停止中にフレームが変わらないこと、再開すると動くこと、停止中の効果切り替え、Spaceキーでの再開を確認。
+- 全16種類のPNGをダウンロードしてデコードし、画像サイズ・描画ピクセル数・比較値がクリック時のCanvasと一致することを確認。保存画像も目視確認。
+- 画面幅1024/800/760/375/320pxで横方向にはみ出さず、スクロールして一覧下部のエフェクトも選べることを確認。
 
 詳細は [docs/TEST_PLAN.md](docs/TEST_PLAN.md) と [docs/WORK_LOG.md](docs/WORK_LOG.md) を参照してください。MVPの未実装項目はありません。Safari / Firefox固有の動作は未検証です。
 
 ## 構成
 
 - `src/main.ts`: 選択UI、保存操作、エラー表示。
-- `src/effects.ts`: 実在確認済みの3モジュールの登録。
+- `src/effects.ts`: 実在確認済みの16モジュールの登録。
 - `src/renderer.ts`: pixelfxからCanvasへの描画、単一のrequestAnimationFrameループ、一時停止・再開。
 - `src/export-png.ts`: 現在のフレームのPNG化、ファイル名、ダウンロードと解放。
 - `src/pixelfx.d.ts`: 実ソースで確認した使用APIの型定義。
-- `src/__tests__/`: 登録・描画ライフサイクル・PNG保存のテスト。
+- `src/__tests__/`: 登録・全16種類の実描画・描画ライフサイクル・PNG保存のテスト。
 
 Vite + vanilla TypeScript + pixelfx + Vitestで構成しています。エフェクトエンジンはpixelfxをそのまま使い、ブラウザ内のCanvas 2Dで処理します。アプリの再生・保存にはバックエンドや外部APIは不要です。依存取得時のみネットワーク接続が必要です。
 
