@@ -107,3 +107,18 @@ Codexは各段階で日付、変更点、テストコマンド、結果、未解
 - 幅1024/800/760/375/320pxで一覧下部の効果を選択でき、スクロール可能で、横にはみ出さないことを確認。末尾から矢印キーで先頭へ戻る操作も確認。
 - スクリーンショット: `output/playwright/catalog-desktop.png`, `catalog-mobile.png`。保存PNG: `output/playwright/catalog/`（Git管理対象外）。
 - 実装と38テスト・ビルド・実ブラウザ検証の段階をcommit・push後、READMEの全16種類の一覧、MVP仕様、テスト計画を更新。元の起動指示書と初期MVPの履歴は保持。
+
+## 2026-11-10 — エフェクトを16種類から32種類へ拡充
+
+- さらに種類を増やす依頼に従い、実在・meta.size/origin/duration/loopを確認した16種類を追加。全32種類、18カテゴリになった。
+- 追加: Meteor、Spirit flame、Ice crystal、Ball lightning、Geyser、Plasma explosion、Rune circle、Heal、Tornado、Cherry blossoms、Ghost、Sword slash、Magic missile、Respawn beam、Poisoned、Confetti。
+- 新カテゴリはMELEE、PROJECTILES、SPAWN、STATUS、UI。アイコンと表示色も追加。すべて元サイズが320×288に収まることを検証。
+- 登録・カテゴリ一覧・カテゴリ絞り込みのテストを先に更新・追加し、未実装状態で4件失敗することを確認してから実装。
+- カタログからカテゴリ候補と件数を生成し、カテゴリ選択で一覧を絞り込めるようにした。現在の効果が対象外ならカテゴリ内の最初の効果へ切り替え、一時停止状態を維持する。
+- 元からある実描画テストは全32種類、ライフサイクルテストは全32種類×2周を自動的に検証。カテゴリ関連3テストを追加し、全57テストが成功。
+- `npm test`: 4ファイル・57テスト成功。`npm run build`: 型検査と本番ビルド成功。`git diff --check`: 成功。
+- Playwrightで全32種類の選択と表示名、全18カテゴリの絞り込み・件数・選択状態・一時停止維持を確認。矢印キーが非表示カテゴリの項目を選ばないことも確認。
+- 追加16種類で1秒後のピクセル変化、停止中0.5秒のフレーム維持、PNG保存とファイル名を確認。保存PNG16枚をPillowでデコードし、320×288・描画ピクセル数・比較値が保存時のCanvasと一致。全16枚を開いて目視確認。
+- 初回の幅800px検証で「すべて」へ戻した際に選択中の末尾項目が見えなくなるケースを検出。ページ全体を動かさず、一覧内で選択カードを表示するよう修正。
+- 修正後、幅1024/800/760/375/320pxで末尾のカード全体が見えること、カテゴリ絞り込み、横にはみ出さないことを再検証し成功。
+- スクリーンショット: `output/playwright/catalog32-desktop.png`, `catalog32-mobile.png`。保存PNGと比較データ: `output/playwright/catalog32/`（Git管理対象外）。アプリのコンソールエラーなし。

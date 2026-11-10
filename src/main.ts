@@ -1,5 +1,5 @@
 import './style.css';
-import { effects, getEffect, type Effect } from './effects';
+import { categories, effects, getEffect, getEffectsByCategory, type Effect } from './effects';
 import { exportPng } from './export-png';
 import { createRenderer } from './renderer';
 
@@ -20,6 +20,11 @@ const icons: Record<Effect['category'], string> = {
   'SCI-FI': '<path d="m12 2 9 5v10l-9 5-9-5V7l9-5Z"/><circle cx="12" cy="12" r="4"/><path d="M12 8v8m-4-4h8"/>',
   PICKUPS: '<path d="m7 3-5 6 10 13L22 9l-5-6H7Zm-5 6h20M7 3l5 19 5-19"/>',
   CRITTERS: '<path d="M12 8C4-2 0 6 5 12c-6 5-1 13 7 3 8 10 13 2 7-3 5-6 1-14-7-4Zm0 0v10m0-10-3-5m3 5 3-5"/>',
+  MELEE: '<path d="m4 3 14 12-3 3L3 4l1-1Zm8 14 5-5m-1 6 5 4m-3-6 4 5M3 21l5-5"/>',
+  PROJECTILES: '<path d="M3 21 19 5M10 4l10-1-1 10M3 13l4-4M11 21l4-4M4 17l3-3"/>',
+  SPAWN: '<path d="M6 3v13m12-13v13m-6-9v11M8 3h8M3 19c4 4 14 4 18 0M9 11l3-3 3 3"/>',
+  STATUS: '<circle cx="7" cy="8" r="3"/><circle cx="17" cy="5" r="2"/><circle cx="15" cy="16" r="5"/><path d="M4 18h3m-1.5-1.5v3"/>',
+  UI: '<path d="m3 21 5-13 8 8-13 5Zm8-17 2-2m3 6 5-1m-2 6 3 2M8 8l8 8M6 14l4 4M13 5l2 2"/>',
 };
 
 app.innerHTML = `
@@ -42,6 +47,11 @@ app.innerHTML = `
       <aside class="effects-panel">
         <fieldset>
           <legend>エフェクト <span class="count">${String(effects.length).padStart(2, '0')}</span></legend>
+          <label class="filter-label" for="category-filter">カテゴリ</label>
+          <select class="category-filter" id="category-filter">
+            <option value="all">すべてのカテゴリ (${effects.length})</option>
+            ${categories.map((category) => `<option value="${category}">${category} (${getEffectsByCategory(category).length})</option>`).join('')}
+          </select>
           <p class="catalog-hint">スクロールして、ほかのエフェクトへ。</p>
           <div class="effect-list" aria-label="エフェクト一覧">
             ${effects.map((effect, index) => `
@@ -83,6 +93,10 @@ const playbackLabel = app.querySelector<HTMLSpanElement>('#playback-label')!;
 const playbackStatus = app.querySelector<HTMLSpanElement>('.playback-status')!;
 const playbackButton = app.querySelector<HTMLButtonElement>('.playback-button')!;
 const inputs = [...app.querySelectorAll<HTMLInputElement>('input[name="effect"]')];
+const categoryFilter = app.querySelector<HTMLSelectElement>('#category-filter')!;
+const effectList = app.querySelector<HTMLDivElement>('.effect-list')!;
+const catalogCount = app.querySelector<HTMLSpanElement>('.count')!;
+const catalogHint = app.querySelector<HTMLParagraphElement>('.catalog-hint')!;
 const saveButton = app.querySelector<HTMLButtonElement>('.save-button')!;
 const saveStatus = app.querySelector<HTMLParagraphElement>('[role="status"]')!;
 let selected: Effect | undefined;
@@ -138,6 +152,26 @@ inputs.forEach((input) => {
   input.addEventListener('change', () => { if (input.checked) selectEffect(input.value); });
 });
 selectEffect(effects[0].id);
+
+categoryFilter.addEventListener('change', () => {
+  const visible = getEffectsByCategory(categoryFilter.value);
+  const visibleIds = new Set<string>(visible.map((effect) => effect.id));
+  inputs.forEach((input) => { input.closest<HTMLLabelElement>('label')!.hidden = !visibleIds.has(input.value); });
+  const all = categoryFilter.value === 'all';
+  catalogCount.textContent = all ? String(effects.length) : `${visible.length}/${effects.length}`;
+  catalogHint.textContent = all ? 'スクロールして、ほかのエフェクトへ。' : `${visible.length}種類のエフェクトを表示中。`;
+  if (selected && !visibleIds.has(selected.id) && visible[0]) {
+    inputs.find((input) => input.value === visible[0].id)!.checked = true;
+    selectEffect(visible[0].id);
+  }
+  effectList.scrollTop = 0;
+  const activeLabel = inputs.find((input) => input.checked)?.closest<HTMLLabelElement>('label');
+  if (activeLabel && !activeLabel.hidden) {
+    const viewport = effectList.getBoundingClientRect();
+    const card = activeLabel.getBoundingClientRect();
+    if (card.bottom > viewport.bottom) effectList.scrollTop += card.bottom - viewport.bottom + 6;
+  }
+});
 
 playbackButton.addEventListener('click', () => {
   if (!renderer || playbackButton.disabled) return;

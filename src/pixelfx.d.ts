@@ -78,3 +78,51 @@ declare module 'pixelfx/fx/pickups/gem-spin' {
 declare module 'pixelfx/fx/critters/butterfly' {
   export const meta: import('pixelfx').EffectModule['meta'];
 }
+declare module 'pixelfx/fx/fire/meteor' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/fire/spirit-flame' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/ice/ice-crystal' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/lightning/ball-lightning' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/water/geyser' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/explosions/plasma-explosion' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/arcane/rune-circle' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/holy/heal' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/nature/tornado' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/weather/cherry-blossoms' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/critters/ghost' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/melee/sword-slash' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/projectiles/magic-missile' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/spawn/respawn-beam' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/status/poisoned' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
+declare module 'pixelfx/fx/ui/confetti' {
+  export const meta: import('pixelfx').EffectModule['meta'];
+}
