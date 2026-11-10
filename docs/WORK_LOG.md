@@ -49,3 +49,21 @@ Codexは各段階で日付、変更点、テストコマンド、結果、未解
   - Lightning strike: 25,234ピクセル、比較値818388369。
 - ブラウザで矢印キーによる選択と、toBlob失敗時のユーザー向けエラーを確認。
 - 幅760/375/320pxで横方向のはみ出しがないことを確認。デスクトップと375pxの画面を保存し目視確認。
+
+## 2026-11-10 — 段階4: ドキュメント・再現確認
+
+- READMEを完成状態の起動方法、操作、保存サイズ、実API、検証結果に更新。TEST_PLANに実施結果を追記。
+- pixelfxのLICENSEとNOTICE原文を `public/THIRD_PARTY_NOTICES.txt` に同梱。ビルド先にも配置される。ギャラリー用フォントは未使用。
+- モバイルで選択インジケーターの横幅が細くならないよう修正し、再度目視確認。
+- 空の一時フォルダへソースとlockfileをコピーし、`npm ci --cache /private/tmp/pixel-fx-npm-cache --fetch-retries=0` → `npm test` → `npm run build` がすべて成功。35パッケージ導入、依存検査0件、16テスト成功。本番ビルド成功。
+- ブラウザ検証後はテスト時計を通常再生に戻した。確認用アプリは `http://127.0.0.1:5180/`。
+- `git diff --check`: 成功。
+- 実装段階ごとにmainへcommit・GitHubへpush。MVPの未実装項目はなし。Safari / Firefox固有の動作は未検証。
+
+### 変更ファイル
+
+- 実装: `src/main.ts`, `src/effects.ts`, `src/renderer.ts`, `src/export-png.ts`, `src/pixelfx.d.ts`, `src/style.css`。
+- テスト: `src/__tests__/effects.test.ts`, `src/__tests__/renderer.test.ts`, `src/__tests__/export-png.test.ts`。
+- 配布・依存: `index.html`, `public/favicon.svg`, `public/THIRD_PARTY_NOTICES.txt`, `package.json`, `package-lock.json`, `.gitignore`。
+- 説明・記録: `README.md`, `docs/TEST_PLAN.md`, `docs/WORK_LOG.md`。
+- 元の指示書・仕様・AGENTSはスターターの内容を維持。
