@@ -8,7 +8,7 @@
 
 </div>
 
-<p align="center"><img src="docs/assets/effect-reel.webp" alt="pixelfxで描画した焚き火、魔法のポータル、滝のアニメーション" width="900"></p>
+<p align="center"><img src="docs/assets/effect-reel-loop.webp" alt="pixelfxで描画した焚き火、魔法のポータル、滝のアニメーション" width="900"></p>
 
 <p align="center"><sub>焚き火 · 魔法のポータル · 滝</sub></p>
 
