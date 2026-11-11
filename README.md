@@ -1,39 +1,16 @@
 <div align="center">
 
-<img src="docs/assets/readme-hero.svg" alt="Pixel FX Studio — Small pixels. Big energy. 244 effects / 21 categories / Frame to PNG" width="1200">
+<p><img src="docs/assets/readme-hero.svg" alt="Pixel FX Studio — 244 effects, 21 categories, PNG export" width="1200"></p>
 
-### その一瞬に、ひらめきを。
-
-<p>244種類のピクセルエフェクトから、アイデアに合う光を見つける。<br>動きを止めて、お気に入りのフレームを、そのままPNGに。</p>
-
-**Vite · TypeScript · pixelfx · Canvas 2D**
+<p><strong>ピクセルエフェクトを探す、再生する、好きなフレームをPNGに。</strong></p>
 
 [はじめる](#quick-start) · [操作方法](#controls) · [244種類](docs/EFFECT_CATALOG.md) · [開発ガイド](#development)
 
 </div>
 
-<br>
+<p align="center"><img src="docs/assets/effect-reel.webp" alt="pixelfxで描画した焚き火、魔法のポータル、滝のアニメーション" width="900"></p>
 
-![魔法のポータルを表示したPixel FX Studio。左にサムネイルギャラリー、右にプレビューとPNG書き出し。](docs/assets/studio-desktop.png)
-
-<p align="center"><sub>選んで、動かして。最高のフレームを持ち帰ろう。</sub></p>
-
-## Made for the moment
-
-| 見つける | 瞬間をつかむ |
-| --- | --- |
-| **244 effects / 21 categories**<br>炎、氷、魔法から連続攻撃まで。実際の描画を使ったサムネイルで、見た目から選べます。 | **Frame by frame**<br>一時停止、コマ送り、リスタート。フレーム番号を見ながら、欲しい瞬間を探せます。 |
-| **日本語でも、英語でも。**<br>`雪`、`クラゲ`、`portal`。名前・タグ・カテゴリを組み合わせて検索できます。 | **Fit / 2× / 4×**<br>全体を眺めて、ピクセルまで近づく。拡大中はドラッグで表示位置を動かせます。 |
-| **Desktop to mobile**<br>PCはギャラリーとプレビューを並べて。スマホは再生・保存を先に、ギャラリーをその下に。 | **The frame, as PNG.**<br>表示倍率に左右されず、元のピクセルサイズで保存。グリッドや操作部は画像に入りません。 |
-
-ローカルで動く、小さな素材探しの作業室です。再生・保存にはバックエンドや外部APIを使いません。
-
-<details>
-<summary><strong>スマートフォンでの表示を見る</strong></summary>
-
-<p align="center"><img src="docs/assets/studio-mobile.png" alt="スマートフォン表示。プレビューと操作部を上に、3列のギャラリーを下に配置。" width="360"></p>
-
-</details>
+<p align="center"><sub>焚き火 · 魔法のポータル · 滝</sub></p>
 
 ## Quick start
 
@@ -63,14 +40,9 @@ npm run dev -- --host 127.0.0.1 --port 5180
 
 ## Workflow
 
-**01 — Explore**<br>
-ギャラリーからひとつ選ぶ。日本語名・英語名・ID・説明・タグで検索し、カテゴリで絞り込めます。大文字・小文字・全角英字は区別せず、空白で区切った語をすべて含む項目を表示します。
-
-**02 — Find your frame**<br>
-プレビューで再生し、気になった瞬間に一時停止。コマ送りで微調整し、必要なら先頭へ。Fitで全体を、2×・4×で細部を確認できます。
-
-**03 — Take it with you**<br>
-**PNGを書き出す**を押すと、表示中のCanvasを保存します。一時停止中も保存でき、表示倍率やドラッグ位置は保存画像に影響しません。
+1. **選ぶ**。サムネイルから探すか、`雪`、`クラゲ`、`portal` などのキーワードとカテゴリで絞り込みます。名前、ID、説明、タグが検索対象です。
+2. **フレームを決める**。再生を一時停止し、コマ送りします。Fitで全体を表示し、2×・4×で拡大したときはドラッグで移動できます。
+3. **PNGを書き出す**。再生中でも停止中でも、現在のフレームを元のCanvasサイズで保存できます。
 
 ## Controls
 
@@ -94,7 +66,9 @@ npm run dev -- --host 127.0.0.1 --port 5180
 - コマ送りは停止して1フレーム進めます。リスタートは再生・停止の状態を保ち、フレーム番号を0に戻します。
 - カテゴリや検索を変えて現在の効果が対象外になると、最初の検索結果へ切り替わります。
 - 0件の場合は、その前のプレビューを維持します。**絞り込みをリセット**で全244種類に戻せます。
+- 検索では大文字・小文字・全角英字を区別しません。空白で区切った語をすべて含む項目を表示します。
 - 単発エフェクトは終了後に再生成し、自動で繰り返します。
+- PCではギャラリーとプレビューを横に並べ、スマートフォンではプレビューと操作部を先に表示します。
 
 </details>
 
@@ -176,7 +150,7 @@ public/
   thumbnails/             全244種類の画像
   THIRD_PARTY_NOTICES.txt  依存元のライセンスとNOTICE
 docs/
-  assets/                 README用バナー・スクリーンショット
+  assets/                 README用バナー・エフェクトアニメーション
   EFFECT_CATALOG.md       全エフェクトのカタログ
   MVP_SPEC.md             仕様
   TEST_PLAN.md            テスト計画・検証結果
@@ -184,7 +158,7 @@ docs/
 vite.config.ts            コア・カテゴリ別のビルド分割
 ```
 
-エンジンはpixelfxの公開APIをそのまま使い、Canvas 2Dで描画します。依存取得時にはネットワーク接続が必要です。GIF/動画出力、スプライトシート生成、パレット編集、AI生成は実装していません。
+ViteとTypeScriptで構成し、pixelfxのエフェクトをCanvas 2Dに描画します。依存取得時にはネットワーク接続が必要です。再生と保存はブラウザ内で完結します。
 
 </details>
 
@@ -195,7 +169,3 @@ vite.config.ts            コア・カテゴリ別のビルド分割
 - pixelfx **0.3.1**、確認済みcommit [`044e12a`](https://github.com/patch-gg/pixelfx/commit/044e12a45dc9cc312cec50ee606dfc98afe5adc2) をHTTPS依存として固定。
 - MIT License · Copyright (c) 2026 Patch / Hugo Duprez。一部はSprite FusionやHollow CrownのOSSコード由来です。
 - 元のライセンスとNOTICEは [THIRD_PARTY_NOTICES.txt](public/THIRD_PARTY_NOTICES.txt) に同梱し、ビルド時に `dist/` へコピーします。
-
----
-
-<p align="center"><strong>MADE OF PIXELS. READY FOR IDEAS.</strong><br><sub>Pixel FX Studio — a little workspace for your next big idea.</sub></p>
