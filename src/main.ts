@@ -1,6 +1,7 @@
 import './style.css';
 import { categories, categoryLabels, effects, getEffect, getEffectsByCategory, searchEffects, type Effect } from './effects';
 import { exportPng } from './export-png';
+import { createEffectLibrary } from './library';
 import { getPreviewLayout } from './preview';
 import { createRenderer, type PlaybackState } from './renderer';
 import { clampPan, getViewportScale, type Zoom } from './viewport';
@@ -11,6 +12,7 @@ const escape = (value: string) => value.replaceAll('&', '&amp;').replaceAll('<',
 const svg = (path: string, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
 const pauseIcon = '<path d="M9 5v14M15 5v14"/>';
 const playIcon = '<path d="m9 5 11 7-11 7V5Z"/>';
+const starIcon = '<path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1 6.2-5.6-2.9-5.6 2.9 1-6.2L3 9.6l6.2-.9Z"/>';
 
 app.innerHTML = `
   <header class="topbar"><div class="topbar-inner">
@@ -23,13 +25,18 @@ app.innerHTML = `
       <aside class="effects-panel" aria-labelledby="library-title">
         <div class="panel-heading"><div><span class="section-index">01 / EXPLORE</span><h2 id="library-title">エフェクトライブラリ</h2></div><span class="count">${effects.length}</span></div>
         <div class="catalog-filters"><label class="search-wrap" for="effect-search">${svg('<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/>')}<span class="sr-only">エフェクトを検索</span><input id="effect-search" type="search" placeholder="雪、炎、魔法…ひらめきを探す" autocomplete="off"></label><div class="category-wrap">${svg('<path d="M4 5h16M7 12h10m-7 7h4"/>')}<label class="sr-only" for="category-filter">カテゴリ</label><select id="category-filter"><option value="all">すべてのカテゴリ</option>${categories.map((category) => `<option value="${category}">${categoryLabels[category]} / ${category} (${getEffectsByCategory(category).length})</option>`).join('')}</select></div></div>
+        <div class="library-views" role="group" aria-label="表示するエフェクト">
+          <button type="button" data-library="all" aria-pressed="true">すべて</button>
+          <button type="button" data-library="favorites" aria-pressed="false">お気に入り</button>
+          <button type="button" data-library="recent" aria-pressed="false">最近使った</button>
+        </div>
         <div class="catalog-summary"><span class="catalog-hint">${effects.length}種類のエフェクト</span><span>SELECT TO PREVIEW ${svg('<path d="m8 5 7 7-7 7"/>')}</span></div>
         <div class="effect-list" role="radiogroup" aria-label="エフェクト一覧">${effects.map((effect, index) => `<label class="effect-choice" title="${escape(effect.label)} / ${escape(effect.name)}"><input type="radio" name="effect" value="${effect.id}" ${index === 0 ? 'checked' : ''}><span class="thumbnail"><img src="/thumbnails/${effect.id.replaceAll('/', '--')}.png" alt="" width="240" height="160" loading="lazy" decoding="async"><span class="effect-category">${effect.category}</span><span class="choice-indicator" aria-hidden="true">${svg('<path d="m6 12 4 4 8-8"/>')}</span></span><span class="effect-label"><strong>${escape(effect.label)}</strong><small>${escape(effect.name)}</small></span></label>`).join('')}</div>
         <div class="catalog-empty" role="status" hidden>${svg('<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4M8 10.5h5"/>')}<p>一致するエフェクトがありません。</p><button class="reset-filter" type="button">絞り込みをリセット</button></div>
         <div class="library-foot"><span class="tiny-grid" aria-hidden="true">▦</span>すべてのエフェクトが、あなたの素材に。</div>
       </aside>
       <section class="preview-panel" aria-labelledby="effect-name">
-        <div class="preview-toolbar"><div class="preview-heading"><span class="section-index">02 / PLAYGROUND</span><h2 id="effect-name">${effects[0].label}</h2><span id="effect-english">${effects[0].name}</span></div><div class="playback-status"><span class="status-dot"></span><span id="playback-label">LIVE PREVIEW</span></div></div>
+        <div class="preview-toolbar"><div class="preview-heading"><span class="section-index">02 / PLAYGROUND</span><h2 id="effect-name">${effects[0].label}</h2><span id="effect-english">${effects[0].name}</span></div><div class="preview-toolbar-actions"><button class="icon-button favorite-button" type="button" aria-label="お気に入りに登録" aria-pressed="false" title="お気に入りに登録" disabled>${svg(starIcon)}</button><div class="playback-status"><span class="status-dot"></span><span id="playback-label">LIVE PREVIEW</span></div></div></div>
         <div class="preview-stage" tabindex="0" role="group" aria-label="プレビュー。Spaceで再生・停止、右矢印で1コマ進む、Homeで先頭に戻る。"><div class="stage-top"><span class="stage-category">ICE</span><span class="stage-fps">30 FPS</span></div><span class="stage-corner corner-tl" aria-hidden="true"></span><span class="stage-corner corner-tr" aria-hidden="true"></span><span class="stage-corner corner-bl" aria-hidden="true"></span><span class="stage-corner corner-br" aria-hidden="true"></span><canvas id="effect-preview" width="320" height="288" role="img"></canvas><div class="stage-bottom"><span>FRAME <b id="frame-number">000</b></span><span class="stage-scale">FIT · 100%</span></div></div>
         <div class="transport"><div class="transport-play"><button class="icon-button restart-button" type="button" aria-label="先頭に戻る" title="先頭に戻る" disabled>${svg('<path d="M4 10a8 8 0 1 1 1.8 7M4 4v6h6"/>')}</button><button class="playback-button" type="button" aria-controls="effect-preview" disabled>${svg(pauseIcon)}<span>一時停止</span></button><button class="icon-button step-button" type="button" aria-label="1コマ進む" title="1コマ進む" disabled>${svg('<path d="m5 5 10 7-10 7V5ZM19 5v14"/>')}</button></div><div class="zoom-control" role="group" aria-label="プレビューの表示倍率"><button type="button" data-zoom="fit" aria-pressed="true">Fit</button><button type="button" data-zoom="2" aria-pressed="false">2×</button><button type="button" data-zoom="4" aria-pressed="false">4×</button></div></div>
         <div class="preview-details"><div class="details-head"><span class="details-label">FRAME OUTPUT</span><span class="preview-dimensions">320 × 288 <small>PX</small></span></div><div class="export-row"><label class="output-background"><span>背景</span><select id="output-background" disabled><option value="solid">背景あり</option><option value="transparent">透過</option></select></label><span class="transition-background" hidden>星空背景</span><button class="save-button" type="button" disabled aria-label="現在のフレームをPNGで保存">${svg('<path d="M12 3v12m-4-4 4 4 4-4M4 15v5h16v-5"/>')}<span>PNGを書き出す</span>${svg('<path d="M5 12h14m-5-5 5 5-5 5"/>', 'export-arrow')}</button></div><details class="effect-info"><summary>エフェクトについて <span id="effect-id">${effects[0].id}</span></summary><p id="effect-description">${escape(effects[0].description)}</p></details></div>
@@ -65,6 +72,16 @@ const effectList = app.querySelector<HTMLDivElement>('.effect-list')!;
 const catalogCount = app.querySelector<HTMLSpanElement>('.count')!;
 const catalogHint = app.querySelector<HTMLSpanElement>('.catalog-hint')!;
 const catalogEmpty = app.querySelector<HTMLDivElement>('.catalog-empty')!;
+const catalogEmptyText = catalogEmpty.querySelector('p')!;
+const libraryButtons = [...app.querySelectorAll<HTMLButtonElement>('[data-library]')];
+const favoriteButton = app.querySelector<HTMLButtonElement>('.favorite-button')!;
+const inputById = new Map(inputs.map((input) => [input.value, input]));
+const library = createEffectLibrary({
+  getItem: (key) => window.localStorage.getItem(key),
+  setItem: (key, value) => window.localStorage.setItem(key, value),
+});
+type LibraryView = 'all' | 'favorites' | 'recent';
+let libraryView: LibraryView = 'all';
 const previewDimensions = app.querySelector<HTMLSpanElement>('.preview-dimensions')!;
 const saveButton = app.querySelector<HTMLButtonElement>('.save-button')!;
 const outputBackground = app.querySelector<HTMLLabelElement>('.output-background')!;
@@ -131,12 +148,23 @@ function updateBackgroundUi(effect: Effect) {
   transitionBackground.hidden = !transition;
   stage.classList.toggle('is-transparent', renderer?.isTransparent === true);
 }
-function selectEffect(id: string) {
+function updateFavoriteUi(effect: Effect) {
+  const favorite = library.favorites.includes(effect.id);
+  const label = favorite ? 'お気に入りから外す' : 'お気に入りに登録';
+  favoriteButton.disabled = false;
+  favoriteButton.setAttribute('aria-pressed', String(favorite));
+  favoriteButton.setAttribute('aria-label', label);
+  favoriteButton.title = label;
+  inputById.get(effect.id)?.closest('label')?.classList.toggle('is-favorite', favorite);
+}
+function selectEffect(id: string, remember = false) {
   const effect = getEffect(id);
   if (!effect || !renderer) return;
   try {
     renderer.select(effect);
     selected = effect;
+    if (remember) library.recordSelection(id);
+    updateFavoriteUi(effect);
     updateBackgroundUi(effect);
     name.textContent = effect.label;
     english.textContent = effect.name;
@@ -154,12 +182,21 @@ function selectEffect(id: string) {
   } catch { showRenderError(); }
 }
 inputs.forEach((input) => {
+  if (library.favorites.includes(input.value)) input.closest('label')?.classList.add('is-favorite');
   input.addEventListener('change', () => {
-    if (input.checked) { selectEffect(input.value); revealChoice(input); }
+    if (!input.checked) return;
+    selectEffect(input.value, true);
+    revealChoice(input);
+  });
+  input.addEventListener('click', () => {
+    if (selected?.id === input.value) library.recordSelection(input.value);
   });
   input.addEventListener('focus', () => revealChoice(input));
 });
-selectEffect(effects[0].id);
+const initialInput = library.recent.map((id) => inputById.get(id)).find(Boolean) ?? inputs[0];
+initialInput.checked = true;
+selectEffect(initialInput.value, false);
+revealChoice(initialInput);
 backgroundSelect.addEventListener('change', () => {
   if (!selected || !renderer || backgroundSelect.disabled) return;
   renderer.setTransparent(backgroundSelect.value === 'transparent');
@@ -175,27 +212,62 @@ function revealChoice(input: HTMLInputElement) {
   else if (card.bottom > viewport.bottom - 6) effectList.scrollTop += card.bottom - viewport.bottom + 6;
 }
 function updateCatalog() {
-  const visible = searchEffects(searchInput.value, categoryFilter.value);
+  const matches = searchEffects(searchInput.value, categoryFilter.value);
+  const matchesById = new Map(matches.map((effect) => [effect.id, effect]));
+  const ids = libraryView === 'favorites' ? library.favorites : library.recent;
+  const visible = libraryView === 'all' ? matches : ids.flatMap((id) => {
+    const effect = matchesById.get(id);
+    return effect ? [effect] : [];
+  });
   const visibleIds = new Set<string>(visible.map((effect) => effect.id));
   inputs.forEach((input) => { input.closest<HTMLLabelElement>('label')!.hidden = !visibleIds.has(input.value); });
   catalogCount.textContent = String(visible.length);
   catalogHint.textContent = `${visible.length}種類のエフェクト${visible.length !== effects.length ? ` / ${effects.length}` : ''}`;
   catalogEmpty.hidden = visible.length > 0;
+  catalogEmptyText.textContent = libraryView === 'favorites' && library.favorites.length === 0
+    ? 'プレビュー横の星を押すと、ここに追加されます。'
+    : libraryView === 'recent' && library.recent.length === 0
+      ? '選んだエフェクトがここに表示されます。'
+      : '一致するエフェクトがありません。';
   effectList.hidden = visible.length === 0;
   if (selected && !visibleIds.has(selected.id) && visible[0]) {
-    inputs.find((input) => input.value === visible[0].id)!.checked = true;
+    inputById.get(visible[0].id)!.checked = true;
     selectEffect(visible[0].id);
   }
   effectList.scrollTop = 0;
   const activeInput = inputs.find((input) => input.checked);
   if (activeInput) revealChoice(activeInput);
 }
+function setLibraryView(view: LibraryView) {
+  if (view !== libraryView || view === 'recent') {
+    libraryView = view;
+    const order = view === 'all'
+      ? inputs
+      : (view === 'favorites' ? library.favorites : library.recent)
+        .flatMap((id) => inputById.get(id) ?? []);
+    let next = effectList.firstElementChild;
+    for (const input of order) {
+      const card = input.closest('label')!;
+      if (card !== next) effectList.insertBefore(card, next);
+      next = card.nextElementSibling;
+    }
+  }
+  libraryButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.library === view)));
+  updateCatalog();
+}
+libraryButtons.forEach((button) => button.addEventListener('click', () => setLibraryView(button.dataset.library as LibraryView)));
+favoriteButton.addEventListener('click', () => {
+  if (!selected) return;
+  library.toggleFavorite(selected.id);
+  updateFavoriteUi(selected);
+  if (libraryView === 'favorites') updateCatalog();
+});
 categoryFilter.addEventListener('change', updateCatalog);
 searchInput.addEventListener('input', updateCatalog);
 app.querySelector('.reset-filter')!.addEventListener('click', () => {
   searchInput.value = '';
   categoryFilter.value = 'all';
-  updateCatalog();
+  setLibraryView('all');
   searchInput.focus();
 });
 function togglePlayback() {
