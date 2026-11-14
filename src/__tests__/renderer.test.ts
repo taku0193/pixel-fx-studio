@@ -50,6 +50,36 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('renderer lifecycle', () => {
+  it('repaints a paused frame with transparent pixels without advancing or recreating it', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    renderer.step();
+    vi.mocked(instances[0].draw).mockImplementation((frame) => { frame.color[0] = 0xff3366ff; });
+    renderer.setTransparent(true);
+    expect(Array.from(putImageData.mock.lastCall![0].data.slice(0, 8))).toEqual([255, 102, 51, 255, 0, 0, 0, 0]);
+    expect(renderer.frame).toBe(1);
+    expect(instances[0].update).toHaveBeenCalledOnce();
+    expect(instances).toHaveLength(1);
+    expect(callbacks.size).toBe(0);
+    renderer.setTransparent(false);
+    expect(putImageData.mock.lastCall![0].data[7]).toBe(255);
+    renderer.dispose();
+  });
+
+  it('keeps the sky for transitions and restores transparency on returning to a regular effect', () => {
+    const renderer = createRenderer(canvas);
+    renderer.select(effects[0]);
+    renderer.setTransparent(true);
+    renderer.select(getEffect('transitions/pixel-dissolve')!);
+    expect(renderer.isTransparent).toBe(false);
+    expect(putImageData.mock.lastCall![0].data[3]).toBe(255);
+    renderer.select(effects[0]);
+    expect(renderer.isTransparent).toBe(true);
+    expect(putImageData.mock.lastCall![0].data[3]).toBe(0);
+    expect(callbacks.size).toBe(1);
+    renderer.dispose();
+  });
+
   it('pauses and advances exactly one effect frame without starting another loop', () => {
     const renderer = createRenderer(canvas);
     renderer.select(effects[0]);

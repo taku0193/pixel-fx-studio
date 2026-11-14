@@ -28,6 +28,9 @@ export function createRenderer(
   let disposed = false;
   let paused = false;
   let elapsed = 0;
+  let transparent = false;
+
+  const isTransparent = () => transparent && !!selected && selected.category !== 'TRANSITIONS';
 
   const fps = () => selected?.module.meta.fps ?? 30;
   const frameIndex = () => Math.floor(elapsed * fps() + 1e-6);
@@ -47,7 +50,7 @@ export function createRenderer(
   function paint() {
     clearFrame(frame);
     current!.draw(frame);
-    composite(frame, image.data, current!.background);
+    composite(frame, image.data, isTransparent() ? null : current!.background);
     context!.putImageData(image, 0, 0);
     notify();
   }
@@ -103,6 +106,13 @@ export function createRenderer(
     get isPaused() { return paused; },
     get elapsed() { return elapsed; },
     get frame() { return frameIndex(); },
+    get isTransparent() { return isTransparent(); },
+    setTransparent(value: boolean) {
+      if (disposed || transparent === value) return;
+      transparent = value;
+      if (!current) return;
+      try { paint(); } catch (error) { fail(error); }
+    },
     pause,
     resume() {
       if (disposed || !current || !paused) return;

@@ -32,7 +32,7 @@ app.innerHTML = `
         <div class="preview-toolbar"><div class="preview-heading"><span class="section-index">02 / PLAYGROUND</span><h2 id="effect-name">${effects[0].label}</h2><span id="effect-english">${effects[0].name}</span></div><div class="playback-status"><span class="status-dot"></span><span id="playback-label">LIVE PREVIEW</span></div></div>
         <div class="preview-stage" tabindex="0" role="group" aria-label="プレビュー。Spaceで再生・停止、右矢印で1コマ進む、Homeで先頭に戻る。"><div class="stage-top"><span class="stage-category">ICE</span><span class="stage-fps">30 FPS</span></div><span class="stage-corner corner-tl" aria-hidden="true"></span><span class="stage-corner corner-tr" aria-hidden="true"></span><span class="stage-corner corner-bl" aria-hidden="true"></span><span class="stage-corner corner-br" aria-hidden="true"></span><canvas id="effect-preview" width="320" height="288" role="img"></canvas><div class="stage-bottom"><span>FRAME <b id="frame-number">000</b></span><span class="stage-scale">FIT · 100%</span></div></div>
         <div class="transport"><div class="transport-play"><button class="icon-button restart-button" type="button" aria-label="先頭に戻る" title="先頭に戻る" disabled>${svg('<path d="M4 10a8 8 0 1 1 1.8 7M4 4v6h6"/>')}</button><button class="playback-button" type="button" aria-controls="effect-preview" disabled>${svg(pauseIcon)}<span>一時停止</span></button><button class="icon-button step-button" type="button" aria-label="1コマ進む" title="1コマ進む" disabled>${svg('<path d="m5 5 10 7-10 7V5ZM19 5v14"/>')}</button></div><div class="zoom-control" role="group" aria-label="プレビューの表示倍率"><button type="button" data-zoom="fit" aria-pressed="true">Fit</button><button type="button" data-zoom="2" aria-pressed="false">2×</button><button type="button" data-zoom="4" aria-pressed="false">4×</button></div></div>
-        <div class="preview-details"><div class="details-head"><span class="details-label">FRAME OUTPUT</span><span class="preview-dimensions">320 × 288 <small>PX</small></span></div><div class="export-row"><div class="output-format"><span class="file-icon">PNG</span><div><strong>この瞬間を、素材に。</strong><span>元のピクセルサイズで保存</span></div></div><button class="save-button" type="button" disabled aria-label="現在のフレームをPNGで保存">${svg('<path d="M12 3v12m-4-4 4 4 4-4M4 15v5h16v-5"/>')}<span>PNGを書き出す</span>${svg('<path d="M5 12h14m-5-5 5 5-5 5"/>', 'export-arrow')}</button></div><details class="effect-info"><summary>エフェクトについて <span id="effect-id">${effects[0].id}</span></summary><p id="effect-description">${escape(effects[0].description)}</p></details></div>
+        <div class="preview-details"><div class="details-head"><span class="details-label">FRAME OUTPUT</span><span class="preview-dimensions">320 × 288 <small>PX</small></span></div><div class="export-row"><label class="output-background"><span>背景</span><select id="output-background" disabled><option value="solid">背景あり</option><option value="transparent">透過</option></select></label><span class="transition-background" hidden>星空背景</span><button class="save-button" type="button" disabled aria-label="現在のフレームをPNGで保存">${svg('<path d="M12 3v12m-4-4 4 4 4-4M4 15v5h16v-5"/>')}<span>PNGを書き出す</span>${svg('<path d="M5 12h14m-5-5 5 5-5 5"/>', 'export-arrow')}</button></div><details class="effect-info"><summary>エフェクトについて <span id="effect-id">${effects[0].id}</span></summary><p id="effect-description">${escape(effects[0].description)}</p></details></div>
         <div class="preview-help"><span class="shortcut-hint"><kbd>Space</kbd> 再生 / 停止 <kbd>→</kbd> コマ送り</span><span class="zoom-hint">Fitでエフェクト全体を表示</span></div>
       </section>
     </div>
@@ -67,6 +67,9 @@ const catalogHint = app.querySelector<HTMLSpanElement>('.catalog-hint')!;
 const catalogEmpty = app.querySelector<HTMLDivElement>('.catalog-empty')!;
 const previewDimensions = app.querySelector<HTMLSpanElement>('.preview-dimensions')!;
 const saveButton = app.querySelector<HTMLButtonElement>('.save-button')!;
+const outputBackground = app.querySelector<HTMLLabelElement>('.output-background')!;
+const backgroundSelect = app.querySelector<HTMLSelectElement>('#output-background')!;
+const transitionBackground = app.querySelector<HTMLSpanElement>('.transition-background')!;
 const saveStatus = app.querySelector<HTMLParagraphElement>('.save-status')!;
 let selected: Effect | undefined;
 let exporting = false;
@@ -82,6 +85,7 @@ function showRenderError() {
   playbackStatus.classList.add('is-error');
   playbackStatus.classList.remove('is-paused');
   [playbackButton, restartButton, stepButton, saveButton].forEach((button) => { button.disabled = true; });
+  backgroundSelect.disabled = true;
 }
 function updatePlaybackUi(state: PlaybackState) {
   if (displayedPaused !== state.paused || playbackStatus.classList.contains('is-error')) {
@@ -119,12 +123,21 @@ function setZoom(value: Zoom) {
   zoomButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.zoom === zoom)));
   applyViewport();
 }
+function updateBackgroundUi(effect: Effect) {
+  const transition = effect.category === 'TRANSITIONS';
+  backgroundSelect.disabled = transition || playbackStatus.classList.contains('is-error');
+  backgroundSelect.value = renderer?.isTransparent ? 'transparent' : 'solid';
+  outputBackground.hidden = transition;
+  transitionBackground.hidden = !transition;
+  stage.classList.toggle('is-transparent', renderer?.isTransparent === true);
+}
 function selectEffect(id: string) {
   const effect = getEffect(id);
   if (!effect || !renderer) return;
   try {
     renderer.select(effect);
     selected = effect;
+    updateBackgroundUi(effect);
     name.textContent = effect.label;
     english.textContent = effect.name;
     description.textContent = effect.description;
@@ -147,6 +160,11 @@ inputs.forEach((input) => {
   input.addEventListener('focus', () => revealChoice(input));
 });
 selectEffect(effects[0].id);
+backgroundSelect.addEventListener('change', () => {
+  if (!selected || !renderer || backgroundSelect.disabled) return;
+  renderer.setTransparent(backgroundSelect.value === 'transparent');
+  updateBackgroundUi(selected);
+});
 
 function revealChoice(input: HTMLInputElement) {
   const label = input.closest<HTMLLabelElement>('label')!;

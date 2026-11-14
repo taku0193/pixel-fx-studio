@@ -90,6 +90,9 @@ input:checked ~ .effect-label strong { color: var(--lime); }
 .preview-stage { position: relative; background: #14171c; height: clamp(280px, 38vh, 420px); overflow: hidden; isolation: isolate; touch-action: pan-y; }
 .preview-stage::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background-image: linear-gradient(#a0b1cf05 1px, transparent 1px), linear-gradient(90deg, #a0b1cf05 1px, transparent 1px); background-size: 24px 24px; }
 .preview-stage canvas { position: absolute; left: 50%; top: 50%; display: block; image-rendering: pixelated; max-width: none; user-select: none; pointer-events: none; }
+.preview-stage.is-transparent canvas {
+  background: repeating-conic-gradient(#171b22 0% 25%, #202630 0% 50%) 0 0 / 20px 20px;
+}
 .preview-stage.is-zoomed { cursor: grab; touch-action: none; }.preview-stage.is-dragging { cursor: grabbing; }
 .stage-top, .stage-bottom { position: absolute; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 2; pointer-events: none; }
 .stage-top { top: 21px; }.stage-bottom { bottom: 19px; }
@@ -112,9 +115,10 @@ input:checked ~ .effect-label strong { color: var(--lime); }
 .details-label { color: #8d97a5; font: 8px var(--mono); letter-spacing: 1.6px; }
 .preview-dimensions { font: 9px var(--mono); color: #c4cbd6; white-space: nowrap; }.preview-dimensions small { font: inherit; color: #808b9b; padding-left: 3px; }
 .export-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }
-.output-format { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.file-icon { display: grid; place-items: center; width: 34px; height: 40px; font: 8px var(--mono); border: 1px solid #464f5d; border-radius: 4px 9px 4px 4px; color: #c4d1df; background: #1b222b; }
-.output-format > div { display: grid; gap: 5px; }.output-format strong { font-size: 11px; font-weight: 500; white-space: nowrap; }.output-format > div > span { color: #858f9f; font-size: 9px; }
+.output-background { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.output-background, .transition-background { font-size: 11px; color: #b1bbc8; }
+.output-background select { min-height: 36px; padding: 0 7px; border: 1px solid #3b4552; border-radius: 5px; background: #181d25; color: #e8edf3; font: inherit; }
+.output-background select:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 .save-button { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 42px; padding: 0 16px; color: #1b240c; font-size: 11px; font-weight: 650; border: 1px solid var(--lime); border-radius: 6px; background: var(--lime); box-shadow: 0 4px 18px #d2ff6a0a; white-space: nowrap; transition: background 150ms, box-shadow 150ms; }
 .save-button svg { width: 16px; height: 16px; }.save-button .export-arrow { width: 14px; margin-left: 8px; }.save-button:hover { background: #e0ff9a; box-shadow: 0 0 24px #d2ff6a1a; }
 .effect-info { border-top: 1px solid #292f39; color: #9ca5b4; font-size: 9px; }.effect-info summary { padding: 13px 0; cursor: pointer; line-height: 1.8; }.effect-info summary > span { font: 8px var(--mono); color: #8994a5; float: right; max-width: 60%; overflow-wrap: anywhere; }.effect-info p { margin: 0; padding: 4px 0 16px; line-height: 1.9; overflow-wrap: anywhere; font-size: 11px; }
@@ -130,7 +134,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, .preview-stage:foc
   .panel-heading, .catalog-summary, .library-foot { padding-inline: 16px; }.catalog-filters { padding-inline: 16px; }.effect-list { padding-inline: 16px 13px; gap: 7px; }
   .preview-toolbar, .transport, .preview-help { padding-inline: 18px; }.preview-details { padding-inline: 18px; }
   .playback-status { font-size: 7px; padding: 6px; letter-spacing: 0; }.preview-heading h2 { font-size: 18px; }
-  .output-format { gap: 7px; }.output-format strong { font-size: 10px; }.output-format > div > span { font-size: 8px; }.save-button { padding-inline: 12px; gap: 7px; }.save-button .export-arrow { display: none; }
+  .save-button { padding-inline: 12px; gap: 7px; }.save-button .export-arrow { display: none; }
   .preview-help { flex-wrap: wrap; gap: 7px; }.catalog-summary > span:last-child { display: none; }
 }
 @media (max-width: 850px) {
@@ -141,7 +145,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, .preview-stage:foc
   .preview-stage { height: 368px; }.preview-toolbar { min-height: 95px; }.preview-heading h2 { font-size: 20px; }.playback-status { font-size: 8px; padding: 7px 9px; }
   .preview-toolbar, .transport, .preview-help { padding-inline: 24px; }.preview-details { padding-inline: 24px; }.preview-help { flex-wrap: nowrap; }
   .icon-button, .playback-button { min-height: 44px; }.icon-button { width: 44px; }.zoom-control button { min-height: 36px; min-width: 40px; }.save-button { min-height: 46px; padding-inline: 18px; }.save-button .export-arrow { display: block; }
-  .output-format strong { font-size: 11px; }.output-format > div > span { font-size: 9px; }.effect-label strong { font-size: 12px; }.effect-label small { font-size: 10px; }
+  .effect-label strong { font-size: 12px; }.effect-label small { font-size: 10px; }
   .header-status > span:last-child, .header-divider { display: none; }
 }
 @media (max-width: 540px) {
@@ -150,7 +154,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, .preview-stage:foc
   .effects-panel, .preview-panel { border-radius: 10px; }.preview-toolbar { min-height: 93px; padding: 17px 16px; gap: 8px; }.section-index { font-size: 7px; letter-spacing: 1.2px; }.preview-heading h2 { font-size: 17px; }.preview-heading .section-index { margin-bottom: 5px; }#effect-english { font-size: 8px; }.playback-status { font-size: 6px; padding: 6px; gap: 5px; }.status-dot { width: 4px; height: 4px; }
   .preview-stage { height: 300px; }.stage-top, .stage-bottom { left: 16px; right: 16px; }.stage-top { top: 15px; }.stage-bottom { bottom: 15px; }.stage-category { font-size: 7px; }.stage-fps, .stage-bottom { font-size: 7px; }.corner-tl, .corner-bl { left: 16px; }.corner-tr, .corner-br { right: 16px; }.corner-tl, .corner-tr { top: 47px; }.corner-bl, .corner-br { bottom: 39px; }
   .transport { padding: 10px 12px; gap: 8px; }.transport-play { gap: 4px; }.playback-button { min-width: 89px; padding-inline: 9px; gap: 6px; }.icon-button { width: 35px; }.zoom-control { padding: 2px; gap: 0; }.zoom-control button { min-width: 32px; padding-inline: 6px; min-height: 38px; }
-  .preview-details { padding: 17px 16px 0; }.details-label { font-size: 7px; }.preview-dimensions { font-size: 8px; }.export-row { gap: 8px; padding: 16px 0; }.output-format { gap: 8px; }.output-format strong { font-size: 10px; }.output-format > div > span { font-size: 8px; }.file-icon { width: 28px; height: 35px; font-size: 7px; }.save-button { padding-inline: 13px; font-size: 10px; gap: 7px; }.save-button .export-arrow { display: none; }.effect-info summary { font-size: 9px; }.effect-info summary > span { font-size: 7px; }
+  .preview-details { padding: 17px 16px 0; }.details-label { font-size: 7px; }.preview-dimensions { font-size: 8px; }.export-row { gap: 8px; padding: 16px 0; }.save-button { padding-inline: 13px; font-size: 10px; gap: 7px; }.save-button .export-arrow { display: none; }.effect-info summary { font-size: 9px; }.effect-info summary > span { font-size: 7px; }
   .preview-help { padding: 11px 16px; font-size: 8px; }.shortcut-hint { display: none; }
   .panel-heading { padding: 20px 16px 17px; }.panel-heading h2 { font-size: 14px; }.catalog-filters { padding-inline: 16px; grid-template-columns: 1fr; }.category-wrap select { min-height: 42px; }.catalog-summary { padding-inline: 16px; font-size: 9px; }.catalog-summary > span:last-child { font-size: 6px; }
   .effect-list { grid-template-columns: repeat(3, minmax(0, 1fr)); height: 388px; padding-inline: 16px 13px; gap: 8px; }.effect-label { padding: 9px 7px 10px; gap: 5px; }.effect-label strong { font-size: 11px; }.effect-label small { font-size: 9px; }.effect-category { font-size: 5px; }.library-foot { padding-inline: 16px; font-size: 8px; }
@@ -158,7 +162,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, .preview-stage:foc
 }
 @media (max-width: 360px) {
   main { padding-inline: 12px; }.topbar-inner { padding-inline: 14px; }.mobile-tag { font-size: 6px; }.intro h1 { font-size: 22px; }.intro-copy { font-size: 9px; }.preview-toolbar { padding-inline: 13px; }.preview-heading h2 { font-size: 15px; }.playback-status { padding: 5px; font-size: 5px; }
-  .transport { padding-inline: 9px; gap: 5px; }.icon-button { width: 30px; }.playback-button { min-width: 81px; font-size: 9px; }.zoom-control button { min-width: 29px; padding-inline: 5px; }.preview-details { padding-inline: 13px; }.file-icon { display: none; }.output-format strong { font-size: 9px; }.output-format > div > span { font-size: 7px; }.save-button { padding-inline: 10px; font-size: 9px; }.preview-help { padding-inline: 13px; }
+  .transport { padding-inline: 9px; gap: 5px; }.icon-button { width: 30px; }.playback-button { min-width: 81px; font-size: 9px; }.zoom-control button { min-width: 29px; padding-inline: 5px; }.preview-details { padding-inline: 13px; }.save-button { padding-inline: 10px; font-size: 9px; }.preview-help { padding-inline: 13px; }
   footer > span:first-child { max-width: 140px; font-size: 5px; }footer > span:last-child { font-size: 6px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
